@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>CategoryController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ElcectronicStore</a> &gt; <a href="index.source.html" class="el_package">com.lcwd.electronic.store.controller</a> &gt; <span class="el_source">CategoryController.java</span></div><h1>CategoryController.java</h1><pre class="source lang-java linenums">package com.lcwd.electronic.store.controller;
+
+import com.lcwd.electronic.store.dtos.CategoryDto;
+import com.lcwd.electronic.store.dtos.PageableResponse;
+import com.lcwd.electronic.store.dtos.ProductDto;
+import com.lcwd.electronic.store.payloads.ApiResponse;
+import com.lcwd.electronic.store.service.CategoryService;
+import com.lcwd.electronic.store.service.ProductService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+<span class="fc" id="L14">@Slf4j</span>
+@RestController
+@RequestMapping(&quot;/categories&quot;)
+<span class="fc" id="L17">public class CategoryController {</span>
+    @Autowired
+    private CategoryService categoryService;
+
+    @Autowired
+    private ProductService productService;
+
+    @PostMapping
+    public ResponseEntity&lt;CategoryDto&gt;createCategory (@RequestBody CategoryDto categoryDto){
+<span class="fc" id="L26">        log.info(&quot;Entering request for createCategory&quot;);</span>
+<span class="fc" id="L27">        CategoryDto categoryDto1 = categoryService.createCategory(categoryDto);</span>
+<span class="fc" id="L28">        log.info(&quot;completed request for createCategory&quot;);</span>
+<span class="fc" id="L29">        return new ResponseEntity&lt;&gt;(categoryDto1, HttpStatus.CREATED);</span>
+
+    }
+    @PutMapping(&quot;/{categoryId}&quot;)
+public ResponseEntity&lt;CategoryDto&gt; updateCategory(@RequestBody CategoryDto categoryDto,@PathVariable Integer categoryId){
+<span class="fc" id="L34">        log.info(&quot;Entering request for updateCategory&quot;);</span>
+<span class="fc" id="L35">        CategoryDto update = categoryService.updateCategory(categoryDto, categoryId);</span>
+<span class="fc" id="L36">        log.info(&quot;completed request for updateCategory&quot;);</span>
+<span class="fc" id="L37">        return new ResponseEntity&lt;&gt;(update,HttpStatus.OK);</span>
+    }
+@DeleteMapping(&quot;/{categoryId}&quot;)
+    public ResponseEntity&lt;ApiResponse&gt; deleteCategory(@PathVariable Integer categoryId){
+<span class="fc" id="L41">    log.info(&quot;Entering request for delete Category&quot;);</span>
+<span class="fc" id="L42">        categoryService.deleteCategory(categoryId);</span>
+<span class="fc" id="L43">    ApiResponse response = ApiResponse.builder().message(&quot;category is deleted &quot;).status(HttpStatus.OK).success(true).build();</span>
+<span class="fc" id="L44">    log.info(&quot;completed request for delete Category&quot;);</span>
+<span class="fc" id="L45">    return new ResponseEntity&lt;&gt;(response,HttpStatus.OK);</span>
+}
+
+    @GetMapping
+    public ResponseEntity&lt;PageableResponse&lt;CategoryDto&gt;&gt; getAll(
+
+            @RequestParam(value = &quot;pageNumber&quot;,defaultValue = &quot;0&quot;,required = false)int pageNumber,
+            @RequestParam(value = &quot;pageSize&quot;,defaultValue = &quot;10&quot;,required = false)int pageSize,
+            @RequestParam(value = &quot;sortBy&quot;,defaultValue = &quot;title&quot;,required = false)String sortBy,
+            @RequestParam(value = &quot;sortDir&quot;,defaultValue = &quot;asc&quot;,required = false)String sortDir){
+<span class="fc" id="L55">        log.info(&quot;Entering request for getAll Category&quot;);</span>
+<span class="fc" id="L56">        PageableResponse&lt;CategoryDto&gt; pageableResponse = categoryService.getAllCategory(pageNumber, pageSize, sortBy, sortDir);</span>
+<span class="fc" id="L57">        log.info(&quot;completed request for getAll Category&quot;);</span>
+<span class="fc" id="L58">        return new ResponseEntity&lt;&gt;(pageableResponse,HttpStatus.OK);</span>
+    }
+
+    @GetMapping(&quot;/{categoryId}&quot;)
+    public ResponseEntity&lt;CategoryDto&gt; getsingleCategory(@PathVariable Integer categoryId){
+<span class="fc" id="L63">        log.info(&quot;Entering request for getsingle category&quot;);</span>
+<span class="fc" id="L64">        CategoryDto categoryDto = categoryService.getSingleCategory(categoryId);</span>
+<span class="fc" id="L65">        log.info(&quot;completed request for getsingle&quot;);</span>
+<span class="fc" id="L66">        return new ResponseEntity&lt;&gt;(categoryDto,HttpStatus.OK);</span>
+
+    }
+
+    //create product with category
+
+    @PostMapping(&quot;/{categoryId}/products&quot;)
+    public ResponseEntity&lt;ProductDto&gt; createProductWithCategory(
+            @PathVariable(&quot;categoryId&quot;)Integer categoryId,
+            @RequestBody ProductDto dto
+            ){
+<span class="nc" id="L77">        ProductDto withCategory = productService.createWithCategory(dto, categoryId);</span>
+<span class="nc" id="L78">        return new ResponseEntity&lt;&gt;(withCategory,HttpStatus.CREATED);</span>
+    }
+
+//update category of product
+
+    @PutMapping(&quot;/{categoryId}/products/{productId}&quot;)
+    public ResponseEntity&lt;ProductDto&gt; updateCategoryofProduct(
+        @PathVariable Integer categoryId,
+        @PathVariable Integer productId
+){
+<span class="nc" id="L88">    ProductDto productDto = productService.updateCategory(productId, categoryId);</span>
+<span class="nc" id="L89">    return new ResponseEntity&lt;&gt;(productDto,HttpStatus.OK);</span>
+}
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

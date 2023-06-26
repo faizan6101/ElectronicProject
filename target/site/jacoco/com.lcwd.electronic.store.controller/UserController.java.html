@@ -1,0 +1,137 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ElcectronicStore</a> &gt; <a href="index.source.html" class="el_package">com.lcwd.electronic.store.controller</a> &gt; <span class="el_source">UserController.java</span></div><h1>UserController.java</h1><pre class="source lang-java linenums">package com.lcwd.electronic.store.controller;
+
+import com.lcwd.electronic.store.dtos.PageableResponse;
+import com.lcwd.electronic.store.dtos.UserDto;
+import com.lcwd.electronic.store.payloads.ApiResponse;
+import com.lcwd.electronic.store.payloads.ImageResponse;
+import com.lcwd.electronic.store.service.FileService;
+import com.lcwd.electronic.store.service.UserServiceI;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.StreamUtils;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletResponse;
+import javax.validation.Valid;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.List;
+<span class="fc" id="L24">@Slf4j</span>
+@RestController
+@RequestMapping(&quot;/users&quot;)
+
+<span class="fc" id="L28">public class UserController {</span>
+
+
+    @Autowired
+    private UserServiceI userServiceI;
+
+    @Autowired
+    private FileService fileService;
+
+    @Value(&quot;${user.profile.image.path}&quot;)
+    private String imageUploadPath;
+
+    @PostMapping
+    public ResponseEntity&lt;UserDto&gt; createUser(@Valid @RequestBody UserDto userDto) {
+<span class="fc" id="L42">        log.info(&quot;Entering request for save user data&quot;);</span>
+<span class="fc" id="L43">        UserDto user = userServiceI.createUser(userDto);</span>
+<span class="fc" id="L44">        log.info(&quot;completed the request for save user data&quot;);</span>
+<span class="fc" id="L45">        return new ResponseEntity&lt;&gt;(user, HttpStatus.CREATED);</span>
+    }
+
+    @PutMapping(&quot;/{userId}&quot;)
+    public ResponseEntity&lt;UserDto&gt; updateUser(@Valid @RequestBody UserDto userDto, @PathVariable(&quot;userId&quot;) Integer userId) {
+<span class="fc" id="L50">        log.info(&quot;Entering request for update user&quot;);</span>
+<span class="fc" id="L51">        UserDto updateuser = userServiceI.updateuser(userDto, userId);</span>
+<span class="fc" id="L52">        log.info(&quot;completed request for update user&quot;);</span>
+<span class="fc" id="L53">        return new ResponseEntity&lt;&gt;(userDto, HttpStatus.OK);</span>
+    }
+
+    @DeleteMapping(&quot;/{userId}&quot;)
+    public ResponseEntity&lt;ApiResponse&gt; deleteUser(@PathVariable Integer userId) {
+<span class="nc" id="L58">        log.info(&quot;Entering request for delete user&quot;);</span>
+<span class="nc" id="L59">        userServiceI.deleteUser(userId);</span>
+<span class="nc" id="L60">        ApiResponse message = ApiResponse.builder().message(&quot;User deleted &quot;).success(true).status(HttpStatus.OK).build();</span>
+<span class="nc" id="L61">        log.info(&quot;completed request for delete user&quot;);</span>
+<span class="nc" id="L62">        return new ResponseEntity&lt;ApiResponse&gt;(message, HttpStatus.OK);</span>
+    }
+
+    @GetMapping
+    public ResponseEntity&lt;PageableResponse&lt;UserDto&gt;&gt; getAllUsers(
+            @RequestParam(value = &quot;pageNumber&quot;, defaultValue = &quot;0&quot;, required = false) int pageNumber,
+            @RequestParam(value = &quot;pageSize&quot;, defaultValue = &quot;10&quot;, required = false) int pagesize,
+            @RequestParam(value = &quot;sortBy&quot;, defaultValue = &quot;name&quot;, required = false) String sortBy,
+            @RequestParam(value = &quot;sortDir&quot;, defaultValue = &quot;asc&quot;, required = false) String sortDir
+
+
+    ) {
+<span class="fc" id="L74">        log.info(&quot;Entering request for getAllUser&quot;);</span>
+<span class="fc" id="L75">        PageableResponse&lt;UserDto&gt; allUser = userServiceI.getAllUser(pageNumber,pagesize,sortBy,sortDir);</span>
+
+<span class="fc" id="L77">        log.info(&quot;completed request for getAllUser&quot;);</span>
+<span class="fc" id="L78">        return new ResponseEntity&lt;&gt;(allUser, HttpStatus.OK);</span>
+    }
+
+    @GetMapping(&quot;/{userId}&quot;)
+    public ResponseEntity&lt;UserDto&gt; getUser(@PathVariable Integer userId) {
+<span class="fc" id="L83">        log.info(&quot;Entering request for getUser&quot;);</span>
+<span class="fc" id="L84">        UserDto user = userServiceI.getUser(userId);</span>
+<span class="fc" id="L85">        log.info(&quot;completed request for getUser&quot;);</span>
+<span class="fc" id="L86">        return new ResponseEntity&lt;&gt;(user, HttpStatus.OK);</span>
+
+    }
+    @GetMapping(&quot;/email/{emailId}&quot;)
+    public ResponseEntity&lt;UserDto&gt; getUserByEmail(@PathVariable String emailId) {
+<span class="fc" id="L91">        log.info(&quot;Entering request for getUserByEmail&quot;);</span>
+<span class="fc" id="L92">        UserDto userByEmail = userServiceI.getUserByEmail(emailId);</span>
+<span class="fc" id="L93">        log.info(&quot;completed request for getUserByEmail&quot;);</span>
+<span class="fc" id="L94">        return new ResponseEntity&lt;&gt;(userByEmail, HttpStatus.OK);</span>
+    }
+
+
+
+@GetMapping(&quot;/search/{keyword}&quot;)
+public ResponseEntity&lt;List&lt;UserDto&gt;&gt; searchUser(@PathVariable String keyword){
+<span class="fc" id="L101">             log.info(&quot;Entering request for searchUser&quot;);</span>
+<span class="fc" id="L102">            List&lt;UserDto&gt; userDtos = userServiceI.searchUser(keyword);</span>
+<span class="fc" id="L103">            log.info(&quot;completed request for searchUser&quot;);</span>
+<span class="fc" id="L104">            return new ResponseEntity&lt;&gt;(userDtos,HttpStatus.OK);</span>
+}
+
+
+//upload user image
+@PostMapping(&quot;/image/{userId}&quot;)
+    public ResponseEntity&lt;ImageResponse&gt; uploadUserImage(@RequestParam(&quot;userImage&quot;)MultipartFile image,Integer userId) throws IOException {
+<span class="nc" id="L111">    log.info(&quot;Entering request for uploadUserImage&quot;);</span>
+<span class="nc" id="L112">    String imageName = fileService.uploadImage(image, imageUploadPath);</span>
+
+<span class="nc" id="L114">    UserDto user = userServiceI.getUser(userId);</span>
+<span class="nc" id="L115">    user.setImageName(imageName);</span>
+<span class="nc" id="L116">    UserDto updateuser = userServiceI.updateuser(user, userId);</span>
+
+<span class="nc" id="L118">    ImageResponse imageResponse=ImageResponse.builder().imageName(imageName).success(true).status(HttpStatus.CREATED).build();</span>
+<span class="nc" id="L119">    log.info(&quot;completed request for uploadUserImage&quot;);</span>
+<span class="nc" id="L120">    return new ResponseEntity&lt;&gt;(imageResponse,HttpStatus.CREATED);</span>
+
+    }
+
+    //serve user image
+@GetMapping(&quot;/image/{userId}&quot;)
+public void serveUserImage(@PathVariable Integer userId, HttpServletResponse response) throws IOException {
+<span class="nc" id="L127">    log.info(&quot;Entering request for serveUserImage&quot;);</span>
+<span class="nc" id="L128">    UserDto user = userServiceI.getUser(userId);</span>
+<span class="nc" id="L129">    log.info(&quot;user image name:{}&quot;,user.getImageName());</span>
+
+<span class="nc" id="L131">    InputStream resource = fileService.getResource(imageUploadPath, user.getImageName());</span>
+<span class="nc" id="L132">    response.setContentType(MediaType.IMAGE_JPEG_VALUE);</span>
+<span class="nc" id="L133">    log.info(&quot;Completed request for serveUserImage&quot;);</span>
+<span class="nc" id="L134">    StreamUtils.copy(resource,response.getOutputStream());</span>
+<span class="nc" id="L135">}</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

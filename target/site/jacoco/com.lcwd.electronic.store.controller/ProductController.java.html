@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProductController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ElcectronicStore</a> &gt; <a href="index.source.html" class="el_package">com.lcwd.electronic.store.controller</a> &gt; <span class="el_source">ProductController.java</span></div><h1>ProductController.java</h1><pre class="source lang-java linenums">package com.lcwd.electronic.store.controller;
+
+import com.lcwd.electronic.store.dtos.PageableResponse;
+import com.lcwd.electronic.store.dtos.ProductDto;
+import com.lcwd.electronic.store.payloads.ApiResponse;
+import com.lcwd.electronic.store.payloads.ImageResponse;
+import com.lcwd.electronic.store.service.FileService;
+import com.lcwd.electronic.store.service.ProductService;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.StreamUtils;
+import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
+
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.InputStream;
+
+<span class="fc" id="L23">@Slf4j</span>
+@RestController
+@RequestMapping(&quot;/products&quot;)
+<span class="fc" id="L26">public class ProductController {</span>
+
+    @Autowired
+    private ProductService service;
+
+    @Autowired
+    private FileService fileService;
+
+    @Value(&quot;${product.image.path}&quot;)
+    private String imagePath;
+
+    //create
+    @PostMapping
+    public ResponseEntity&lt;ProductDto&gt; createProduct(@RequestBody ProductDto productDto){
+<span class="nc" id="L40">        log.info(&quot;Entering request for createProduct&quot;);</span>
+<span class="nc" id="L41">        ProductDto createProduct = service.create(productDto);</span>
+<span class="nc" id="L42">        log.info(&quot;Completed request for createProduct &quot;);</span>
+<span class="nc" id="L43">        return new ResponseEntity&lt;&gt;(createProduct, HttpStatus.CREATED);</span>
+
+    }
+
+    //update
+    @PutMapping(&quot;/{productId}&quot;)
+    public ResponseEntity&lt;ProductDto&gt; updateProduct(@RequestBody ProductDto productDto,@PathVariable Integer productId){
+<span class="nc" id="L50">        log.info(&quot;Entering request for updateProduct&quot;);</span>
+<span class="nc" id="L51">        ProductDto updateProduct = service.update(productDto, productId);</span>
+<span class="nc" id="L52">        log.info(&quot;Completed request for updateProduct &quot;);</span>
+<span class="nc" id="L53">        return new ResponseEntity&lt;&gt;(updateProduct, HttpStatus.OK);</span>
+
+    }
+
+    //delete
+    @DeleteMapping(&quot;/{productId}&quot;)
+    public ResponseEntity&lt;ApiResponse&gt; deleteProduct(@PathVariable Integer productId){
+<span class="nc" id="L60">        log.info(&quot;Entering request for deleteProduct&quot;);</span>
+<span class="nc" id="L61">      service.delete(productId);</span>
+<span class="nc" id="L62">        ApiResponse responseMessage = ApiResponse.builder().message(&quot;product is deleted sucessfuly&quot;).status(HttpStatus.OK).success(true).build();</span>
+<span class="nc" id="L63">        log.info(&quot;Completed request for deleteProduct &quot;);</span>
+<span class="nc" id="L64">        return new ResponseEntity&lt;&gt;(responseMessage,HttpStatus.OK);</span>
+    }
+
+    //get single
+    @GetMapping(&quot;/{productId}&quot;)
+    public ResponseEntity&lt;ProductDto&gt; getProduct(@PathVariable Integer productId){
+<span class="nc" id="L70">        log.info(&quot;Entering request for getProduct&quot;);</span>
+<span class="nc" id="L71">        ProductDto getProduct = service.get(productId);</span>
+<span class="nc" id="L72">        log.info(&quot;Completed request for getProduct &quot;);</span>
+<span class="nc" id="L73">        return new ResponseEntity&lt;&gt;(getProduct, HttpStatus.OK);</span>
+
+    }
+
+    //get all
+    @GetMapping
+    public ResponseEntity&lt;PageableResponse&gt; getAll(
+            @RequestParam(value = &quot;pageNumber&quot;,defaultValue = &quot;0&quot;,required = false)int pageNumber,
+            @RequestParam(value = &quot;pageSize&quot;,defaultValue = &quot;10&quot;,required = false)int pageSize,
+            @RequestParam(value = &quot;sortBy&quot;,defaultValue = &quot;title&quot;,required = false)String sortBy,
+            @RequestParam(value = &quot;sortDir&quot;,defaultValue = &quot;asc&quot;,required = false)String sortDir
+    ){
+<span class="nc" id="L85">        log.info(&quot;Entering request for getAllProduct&quot;);</span>
+<span class="nc" id="L86">        PageableResponse&lt;ProductDto&gt; pageableResponse = service.getAll(pageNumber, pageSize, sortBy, sortDir);</span>
+<span class="nc" id="L87">        log.info(&quot;Completed request for getAllProduct &quot;);</span>
+
+<span class="nc" id="L89">        return new ResponseEntity&lt;&gt;(pageableResponse,HttpStatus.OK);</span>
+
+    }
+
+    //get all live
+    @GetMapping(&quot;/live&quot;)
+    public ResponseEntity&lt;PageableResponse&gt; getAllLive(
+            @RequestParam(value = &quot;pageNumber&quot;,defaultValue = &quot;0&quot;,required = false)int pageNumber,
+            @RequestParam(value = &quot;pageSize&quot;,defaultValue = &quot;10&quot;,required = false)int pageSize,
+            @RequestParam(value = &quot;sortBy&quot;,defaultValue = &quot;title&quot;,required = false)String sortBy,
+            @RequestParam(value = &quot;sortDir&quot;,defaultValue = &quot;asc&quot;,required = false)String sortDir
+    ){
+<span class="nc" id="L101">        log.info(&quot;Entering request for getAllLive&quot;);</span>
+<span class="nc" id="L102">        PageableResponse&lt;ProductDto&gt; pageableResponse = service.getAllLive(pageNumber, pageSize, sortBy, sortDir);</span>
+<span class="nc" id="L103">        log.info(&quot;Completed request for getAllLive &quot;);</span>
+<span class="nc" id="L104">        return new ResponseEntity&lt;&gt;(pageableResponse,HttpStatus.OK);</span>
+
+    }
+    //search all
+    @GetMapping(&quot;/search/{query}&quot;)
+    public ResponseEntity&lt;PageableResponse&gt; search(
+            @PathVariable String query,//query=subtitle
+            @RequestParam(value = &quot;pageNumber&quot;,defaultValue = &quot;0&quot;,required = false)int pageNumber,
+            @RequestParam(value = &quot;pageSize&quot;,defaultValue = &quot;10&quot;,required = false)int pageSize,
+            @RequestParam(value = &quot;sortBy&quot;,defaultValue = &quot;title&quot;,required = false)String sortBy,
+            @RequestParam(value = &quot;sortDir&quot;,defaultValue = &quot;asc&quot;,required = false)String sortDir
+    ){
+<span class="nc" id="L116">        log.info(&quot;Entering request for searchByTitle &quot;);</span>
+<span class="nc" id="L117">        PageableResponse&lt;ProductDto&gt; pageableResponse = service.searchByTitle(query,pageNumber, pageSize, sortBy, sortDir);</span>
+<span class="nc" id="L118">        log.info(&quot;Completed request for searchByTitle &quot;);</span>
+<span class="nc" id="L119">        return new ResponseEntity&lt;&gt;(pageableResponse,HttpStatus.OK);</span>
+
+    }
+
+
+    //upload image
+    @PostMapping(&quot;/image/{productId}&quot;)
+    public ResponseEntity&lt;ImageResponse&gt; uploadProductImage
+    (@PathVariable Integer productId,
+     @RequestParam(&quot;productImage&quot;)MultipartFile image)
+            throws IOException {
+<span class="nc" id="L130">        log.info(&quot;Entering request for uploadProductImage &quot;);</span>
+<span class="nc" id="L131">        String fileName = fileService.uploadImage(image, imagePath);</span>
+<span class="nc" id="L132">        ProductDto productDto = service.get(productId);</span>
+<span class="nc" id="L133">        productDto.setProductImageName(fileName);</span>
+<span class="nc" id="L134">        ProductDto update = service.update(productDto, productId);</span>
+
+<span class="nc" id="L136">        ImageResponse response = ImageResponse.builder()</span>
+<span class="nc" id="L137">                .imageName(update.getProductImageName())</span>
+<span class="nc" id="L138">                .message(&quot;Product image is successfully uploaded&quot;)</span>
+<span class="nc" id="L139">                .status(HttpStatus.CREATED)</span>
+<span class="nc" id="L140">                .success(true)</span>
+<span class="nc" id="L141">                .build();</span>
+<span class="nc" id="L142">        log.info(&quot;Completed request for uploadProductImage &quot;);</span>
+<span class="nc" id="L143">        return new ResponseEntity&lt;&gt;(response,HttpStatus.CREATED);</span>
+    }
+//serve image
+@GetMapping(&quot;/image/{productId}&quot;)
+public void serveUserImage(@PathVariable Integer productId, HttpServletResponse response) throws IOException {
+<span class="nc" id="L148">    log.info(&quot;Entering request for serveUserImage&quot;);</span>
+<span class="nc" id="L149">    ProductDto productDto = service.get(productId);</span>
+<span class="nc" id="L150">    log.info(&quot;user image name:{}&quot;,productDto.getProductImageName());</span>
+
+<span class="nc" id="L152">    InputStream resource = fileService.getResource(imagePath, productDto.getProductImageName());</span>
+<span class="nc" id="L153">    response.setContentType(MediaType.IMAGE_JPEG_VALUE);</span>
+<span class="nc" id="L154">    log.info(&quot;Completed request for serveUserImage&quot;);</span>
+<span class="nc" id="L155">    StreamUtils.copy(resource,response.getOutputStream());</span>
+<span class="nc" id="L156">}</span>
+
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

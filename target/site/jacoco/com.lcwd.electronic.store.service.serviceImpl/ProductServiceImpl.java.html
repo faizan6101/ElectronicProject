@@ -1,0 +1,139 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>ProductServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ElcectronicStore</a> &gt; <a href="index.source.html" class="el_package">com.lcwd.electronic.store.service.serviceImpl</a> &gt; <span class="el_source">ProductServiceImpl.java</span></div><h1>ProductServiceImpl.java</h1><pre class="source lang-java linenums">package com.lcwd.electronic.store.service.serviceImpl;
+
+import com.lcwd.electronic.store.dtos.PageableResponse;
+import com.lcwd.electronic.store.dtos.ProductDto;
+import com.lcwd.electronic.store.entities.Category;
+import com.lcwd.electronic.store.entities.Product;
+import com.lcwd.electronic.store.exception.ResourceNotFoundException;
+import com.lcwd.electronic.store.helper.Helper;
+import com.lcwd.electronic.store.repository.CategoryRepository;
+import com.lcwd.electronic.store.repository.ProductRepository;
+import com.lcwd.electronic.store.service.ProductService;
+import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
+import java.util.Date;
+
+<span class="fc" id="L23">@Slf4j</span>
+@Service
+<span class="fc" id="L25">public class ProductServiceImpl implements ProductService {</span>
+@Autowired
+private ProductRepository repository;
+
+@Autowired
+private CategoryRepository categoryRepository;
+
+@Autowired
+private ModelMapper mapper;
+
+    @Override
+    public ProductDto create(ProductDto productDto) {
+<span class="nc" id="L37">        log.info(&quot;Initiating Dao call for create Product&quot;);</span>
+<span class="nc" id="L38">        Product product = mapper.map(productDto, Product.class);</span>
+<span class="nc" id="L39">        product.setAddedDate(new Date());</span>
+<span class="nc" id="L40">        Product save = repository.save(product);</span>
+<span class="nc" id="L41">        log.info(&quot;completed Dao call for create Product&quot;);</span>
+<span class="nc" id="L42">        return mapper.map(save,ProductDto.class);</span>
+    }
+
+    @Override
+    public ProductDto update(ProductDto productDto, Integer productId) {
+<span class="nc" id="L47">        log.info(&quot;Initiating Dao call for update Product&quot;);</span>
+<span class="nc" id="L48">        Product product = repository.findById(productId).orElseThrow(() -&gt; new ResourceNotFoundException(&quot;product not found of given Id!!&quot;));</span>
+<span class="nc" id="L49">        product.setTitle(productDto.getTitle());</span>
+<span class="nc" id="L50">        product.setDescription(productDto.getDescription());</span>
+<span class="nc" id="L51">        product.setPrice(productDto.getPrice());</span>
+<span class="nc" id="L52">        product.setDiscountedPrice(productDto.getDiscountedPrice());</span>
+<span class="nc" id="L53">        product.setQuantity(productDto.getQuantity());</span>
+<span class="nc" id="L54">        product.setLive(productDto.isLive());</span>
+<span class="nc" id="L55">        product.setStock(productDto.isLive());</span>
+<span class="nc" id="L56">        product.setProductImageName(productDto.getProductImageName());</span>
+<span class="nc" id="L57">        Product updatedProduct = repository.save(product);</span>
+<span class="nc" id="L58">        log.info(&quot;completed Dao call for update Product&quot;);</span>
+<span class="nc" id="L59">        return mapper.map(updatedProduct,ProductDto.class);</span>
+    }
+
+    @Override
+    public void delete(Integer productId) {
+<span class="nc" id="L64">        log.info(&quot;Initiating Dao call for delete Product&quot;);</span>
+
+<span class="nc" id="L66">        Product product = repository.findById(productId).orElseThrow(() -&gt; new ResourceNotFoundException(&quot;product not found of given Id!!&quot;));</span>
+<span class="nc" id="L67">        log.info(&quot;completed Dao call for delete Product&quot;);</span>
+<span class="nc" id="L68">        repository.delete(product);</span>
+<span class="nc" id="L69">    }</span>
+
+    @Override
+    public ProductDto get(Integer productId) {
+<span class="nc" id="L73">        log.info(&quot;Initiating Dao call for get Product&quot;);</span>
+<span class="nc" id="L74">        Product product = repository.findById(productId).orElseThrow(() -&gt; new ResourceNotFoundException(&quot;product not found of given Id!!&quot;));</span>
+<span class="nc" id="L75">        log.info(&quot;completed Dao call for get Product&quot;);</span>
+<span class="nc" id="L76">        return mapper.map(product,ProductDto.class);</span>
+    }
+
+    @Override
+    public PageableResponse&lt;ProductDto&gt; getAll(int pageNumber, int pageSize, String sortBy, String sortDir) {
+<span class="nc" id="L81">        log.info(&quot;Initiating Dao call for getAll Product&quot;);</span>
+<span class="nc bnc" id="L82" title="All 2 branches missed.">   Sort sort=(sortDir.equalsIgnoreCase(&quot;desc&quot;))?(Sort.by(sortBy).descending()):(Sort.by(sortBy).ascending());</span>
+<span class="nc" id="L83">       Pageable pageable= PageRequest.of(pageNumber,pageSize,sort);</span>
+<span class="nc" id="L84">        Page&lt;Product&gt; page = repository.findAll(pageable);</span>
+<span class="nc" id="L85">        log.info(&quot;completed Dao call for getAll Product&quot;);</span>
+<span class="nc" id="L86">        return Helper.getPageableResponse(page,ProductDto.class);</span>
+    }
+
+    @Override
+    public PageableResponse&lt;ProductDto&gt; getAllLive(int pageNumber, int pageSize, String sortBy, String sortDir) {
+<span class="nc" id="L91">        log.info(&quot;Initiating Dao call for getAllLive Product&quot;);</span>
+<span class="nc bnc" id="L92" title="All 2 branches missed.">        Sort sort=(sortDir.equalsIgnoreCase(&quot;desc&quot;))?(Sort.by(sortBy).descending()):(Sort.by(sortBy).ascending());</span>
+<span class="nc" id="L93">        Pageable pageable= PageRequest.of(pageNumber,pageSize,sort);</span>
+<span class="nc" id="L94">        Page&lt;Product&gt; page = repository.findByLiveTrue(pageable);</span>
+<span class="nc" id="L95">        log.info(&quot;completed Dao call for getAllLive Product&quot;);</span>
+<span class="nc" id="L96">        return Helper.getPageableResponse(page,ProductDto.class);</span>
+    }
+
+    @Override
+    public PageableResponse&lt;ProductDto&gt; searchByTitle(String subTitle, int pageNumber, int pageSize, String sortBy, String sortDir) {
+<span class="nc" id="L101">        log.info(&quot;Initiating Dao call for searchByTitle Product&quot;);</span>
+<span class="nc bnc" id="L102" title="All 2 branches missed.">        Sort sort=(sortDir.equalsIgnoreCase(&quot;desc&quot;))?(Sort.by(sortBy).descending()):(Sort.by(sortBy).ascending());</span>
+<span class="nc" id="L103">        Pageable pageable= PageRequest.of(pageNumber,pageSize,sort);</span>
+<span class="nc" id="L104">        Page&lt;Product&gt; page = repository.findByTitleContaining(subTitle,pageable);</span>
+<span class="nc" id="L105">        log.info(&quot;completed Dao call for searchByTitle Product&quot;);</span>
+<span class="nc" id="L106">        return Helper.getPageableResponse(page,ProductDto.class);</span>
+
+    }
+
+    @Override
+    public ProductDto createWithCategory(ProductDto productDto, Integer categoryId) {
+        //fetch category from DB
+<span class="nc" id="L113">        Category category = categoryRepository.findById(categoryId).orElseThrow(() -&gt; new ResourceNotFoundException(&quot;category not found&quot;));</span>
+<span class="nc" id="L114">        Product product = mapper.map(productDto, Product.class);</span>
+<span class="nc" id="L115">        product.setAddedDate(new Date());</span>
+<span class="nc" id="L116">        product.setCategory(category);</span>
+<span class="nc" id="L117">        Product save = repository.save(product);</span>
+
+<span class="nc" id="L119">        return mapper.map(save,ProductDto.class);</span>
+            }
+
+            //update category of product
+    @Override
+    public ProductDto updateCategory(Integer productId, Integer categoryId) {
+        //product fetch
+<span class="nc" id="L126">        Product product = repository.findById(productId).orElseThrow(() -&gt; new ResourceNotFoundException(&quot;product of given id not found !!&quot;));</span>
+<span class="nc" id="L127">        Category category = categoryRepository.findById(categoryId).orElseThrow(() -&gt; new ResourceNotFoundException(&quot;product of given id not found !!&quot;));</span>
+<span class="nc" id="L128">        product.setCategory(category);</span>
+<span class="nc" id="L129">        Product savedProduct = repository.save(product);</span>
+
+<span class="nc" id="L131">        return mapper.map(savedProduct,ProductDto.class);</span>
+    }
+
+
+//    public PageableResponse&lt;ProductDto&gt; getAllOfCategory(Integer categoryId){
+//        repository.findByCategory(category);
+//    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>

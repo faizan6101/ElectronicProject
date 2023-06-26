@@ -1,0 +1,5 @@
+com\lcwd\electronic\store\controller\CategoryControllerTest.class
+com\lcwd\electronic\store\services\UserServiceImplTest.class
+com\lcwd\electronic\store\services\CategoryServiceImplTest.class
+com\lcwd\electronic\store\controller\UserControllerTest.class
+com\lcwd\electronic\store\ElcectronicStoreApplicationTests.class

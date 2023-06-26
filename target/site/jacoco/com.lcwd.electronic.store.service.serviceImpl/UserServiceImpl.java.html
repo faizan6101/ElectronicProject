@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserServiceImpl.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">ElcectronicStore</a> &gt; <a href="index.source.html" class="el_package">com.lcwd.electronic.store.service.serviceImpl</a> &gt; <span class="el_source">UserServiceImpl.java</span></div><h1>UserServiceImpl.java</h1><pre class="source lang-java linenums">package com.lcwd.electronic.store.service.serviceImpl;
+
+import com.lcwd.electronic.store.config.AppConstant;
+import com.lcwd.electronic.store.dtos.PageableResponse;
+import com.lcwd.electronic.store.dtos.UserDto;
+import com.lcwd.electronic.store.entities.User;
+import com.lcwd.electronic.store.exception.ResourceNotFoundException;
+import com.lcwd.electronic.store.helper.Helper;
+
+import com.lcwd.electronic.store.repository.UserRepository;
+import com.lcwd.electronic.store.service.UserServiceI;
+import lombok.extern.slf4j.Slf4j;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
+import org.springframework.stereotype.Service;
+
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.stream.Collectors;
+<span class="fc" id="L27">@Slf4j</span>
+@Service
+<span class="fc" id="L29">public class UserServiceImpl implements UserServiceI {</span>
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private ModelMapper modelMapper;
+
+    @Value(&quot;${user.profile.image.path}&quot;)
+    private String imagePath;
+    @Override
+    public UserDto createUser(UserDto userDto) {
+<span class="fc" id="L40">        log.info(&quot;Initiating Dao call for save user data&quot;);</span>
+
+        //dto to entity
+<span class="fc" id="L43">        User user = dtoToEntity(userDto);</span>
+<span class="fc" id="L44">        user.setIsactive(AppConstant.YES);</span>
+<span class="fc" id="L45">        User savedUser= userRepository.save(user);</span>
+//entity to userDto
+<span class="fc" id="L47">        UserDto newDto = entityToDto(savedUser);</span>
+<span class="fc" id="L48">        log.info(&quot;completed dao call for save user&quot;);</span>
+<span class="fc" id="L49">        return newDto;</span>
+    }
+
+
+    @Override
+    public UserDto updateuser(UserDto userDto, Integer userId) {
+<span class="fc" id="L55">        log.info(&quot;Initiating Dao call for update user&quot;);</span>
+<span class="pc" id="L56">        User user = userRepository.findById(userId).orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found&quot;));</span>
+
+<span class="fc" id="L58">        user.setName(userDto.getName());</span>
+<span class="fc" id="L59">        user.setAbout(userDto.getAbout());</span>
+<span class="fc" id="L60">        user.setEmail(userDto.getEmail());</span>
+<span class="fc" id="L61">        user.setGender(userDto.getGender());</span>
+<span class="fc" id="L62">        user.setPassword(userDto.getPassword());</span>
+<span class="fc" id="L63">        user.setImageName(userDto.getImageName());</span>
+
+<span class="fc" id="L65">        User save = userRepository.save(user);</span>
+<span class="fc" id="L66">        UserDto updateDto = entityToDto(user);</span>
+
+
+<span class="fc" id="L69">        log.info(&quot;completed Dao call for update user&quot;);</span>
+<span class="fc" id="L70">        return updateDto;</span>
+    }
+
+
+
+
+    @Override
+    public void deleteUser(Integer userId) {
+<span class="nc" id="L78">        log.info(&quot;Initiating Dao call for Delete user&quot;);</span>
+<span class="nc" id="L79">        User user = userRepository.findById(userId).orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found with Goven UserId&quot;));</span>
+
+        //delete user profile image
+
+<span class="nc" id="L83">        String fullPath = imagePath + user.getImageName();</span>
+        try {
+<span class="nc" id="L85">            Path path = Paths.get(fullPath);</span>
+<span class="nc" id="L86">            Files.delete(path);</span>
+<span class="nc" id="L87">        }catch(IOException e){</span>
+<span class="nc" id="L88">            throw new RuntimeException(e);</span>
+<span class="nc" id="L89">        }</span>
+        //delete user
+<span class="nc" id="L91">        userRepository.delete(user);</span>
+<span class="nc" id="L92">        user.setIsactive(AppConstant.NO);</span>
+<span class="nc" id="L93">        log.info(&quot;completed Dao call for Delete user&quot;);</span>
+<span class="nc" id="L94">    }</span>
+
+    @Override
+    public PageableResponse&lt;UserDto&gt; getAllUser(int pageNumber, int pageSize, String sortBy, String sortDir) {
+<span class="fc" id="L98">        log.info(&quot;Initiating Dao call for getAll user&quot;);</span>
+<span class="fc" id="L99">        Sort sort = Sort.by(sortBy);</span>
+
+<span class="fc" id="L101">        PageRequest pageable = PageRequest.of(pageNumber, pageSize,sort);</span>
+
+<span class="fc" id="L103">        Page&lt;User&gt; page = userRepository.findAll(pageable);</span>
+<span class="fc" id="L104">        PageableResponse&lt;UserDto&gt; response = Helper.getPageableResponse(page, UserDto.class);</span>
+
+<span class="fc" id="L106">        log.info(&quot;completed Dao call for getAll user &quot;);</span>
+
+<span class="fc" id="L108">        return response;</span>
+
+    }
+
+    @Override
+    public UserDto getUser(Integer userId) {
+<span class="fc" id="L114">        log.info(&quot;Initiating Dao call for getUser&quot;);</span>
+<span class="pc" id="L115">        User usersid = userRepository.findById(userId).orElseThrow(() -&gt; new RuntimeException(&quot;userId not found&quot;));</span>
+
+<span class="fc" id="L117">        UserDto userDtoId = entityToDto(usersid);</span>
+<span class="fc" id="L118">        log.info(&quot;completed Dao call for getUser&quot;);</span>
+<span class="fc" id="L119">        return userDtoId;</span>
+    }
+
+    @Override
+    public List&lt;UserDto&gt; searchUser(String keyword) {
+<span class="fc" id="L124">        log.info(&quot;Initiating Dao for searchUser&quot;);</span>
+<span class="fc" id="L125">        List&lt;User&gt; users = userRepository.findByNameContaining(keyword);</span>
+<span class="fc" id="L126">        List&lt;UserDto&gt; collect = users.stream().map(user -&gt; entityToDto(user)).collect(Collectors.toList());</span>
+<span class="fc" id="L127">        log.info(&quot;completed Dao call for searchUser&quot;);</span>
+<span class="fc" id="L128">        return collect;</span>
+    }
+
+    @Override
+    public UserDto getUserByEmail(String email) {
+<span class="fc" id="L133">        log.info(&quot;Initiating Dao call for getUserByEmail&quot;);</span>
+<span class="pc" id="L134">        User user = userRepository.findByEmail(email).orElseThrow(() -&gt; new ResourceNotFoundException(&quot;user not found by email!!&quot;));</span>
+<span class="fc" id="L135">        log.info(&quot;completed Dao call for getUserByEmail&quot;);</span>
+
+<span class="fc" id="L137">        return entityToDto(user);</span>
+    }
+
+
+    //===================================================================
+    //Conversion
+    private User dtoToEntity(UserDto userDto) {
+
+<span class="fc" id="L145">        return modelMapper.map(userDto, User.class);</span>
+    }
+
+    private UserDto entityToDto(User savedUser) {
+
+<span class="fc" id="L150">        return modelMapper.map(savedUser, UserDto.class);</span>
+
+    }
+
+
+
+
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.8.202204050719</span></div></body></html>
