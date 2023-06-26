@@ -5,7 +5,8 @@ import com.lcwd.electronic.store.dtos.PageableResponse;
 
 public interface CategoryService {
 
-    //create
+    //create category
+    
     CategoryDto createCategory(CategoryDto categoryDto);
 
     //update
